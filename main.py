@@ -65,7 +65,7 @@ def draw_graph(nb_list):
 
 
 if __name__ == "__main__":
-    data = pd.read_csv('data/iris.csv')
+    data = pd.read_csv('notebooks/dane.csv')
     data_header = data.columns
 
     trainingData3 = list(data.to_numpy())  # demo data from matlab
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     prune(decisionTree3, 0.5)
     plot(decisionTree3)
     G, edge_dict = draw_graph(get_neighborhood_list(decisionTree3))
-    plt.figure(figsize=(20,20))
+    plt.figure(figsize=(10,10))
     plt.subplot(111)
 
     pos = nx.kamada_kawai_layout(G,scale=3)
