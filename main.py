@@ -10,10 +10,18 @@ from decision_tree.open_file import loadCSV
 import matplotlib.pyplot as plt
 import networkx as nx
 
-
+def get_hash_dict(d_tree, hash_dict):
+    if d_tree.branch_with_value is not None:
+        hash_dict[d_tree.__hash__()] = {'value':d_tree.value,
+                                        'col':d_tree.col_name,
+                                        'children': [d_tree.branch_with_value.__hash__(), d_tree.branch_with_others.__hash__()]
+                                        }
+        get_hash_dict(d_tree.branch_with_value, hash_dict)
+        get_hash_dict(d_tree.branch_with_others, hash_dict)
 
 
 def get_neighborhood_list(d_tree):
+
     dict = {}
     get_hash_dict(d_tree, dict)
     print(dict)
@@ -26,7 +34,7 @@ def get_neighborhood_list(d_tree):
     neighborhood_list = {}
     for k,v in dict.items():
         neighborhood_list[hash_to_int[k]]={'value': v['value'],
-                                           'col':v['col'],
+                                           'col': v['col'],
                                            'children':[hash_to_int[v['children'][0]], hash_to_int[v['children'][1]]],
 
                                            }
@@ -50,31 +58,27 @@ def draw_graph(nb_list):
         G.nodes[k]['value'] = v['value']
 
     return G, edge_dict
-def get_hash_dict(d_tree, hash_dict):
-    if d_tree.branch_with_value is not None:
-        hash_dict[d_tree.__hash__()] = {'value':d_tree.value,
-                                        'col':d_tree.col,
-                                        'children': [d_tree.branch_with_value.__hash__(), d_tree.branch_with_others.__hash__()]
-                                        }
-        get_hash_dict(d_tree.branch_with_value, hash_dict)
-        get_hash_dict(d_tree.branch_with_others, hash_dict)
+
 
 
 
 
 
 if __name__ == "__main__":
-    trainingData3 = loadCSV('data/iris.csv')  # demo data from matlab
+    data = pd.read_csv('data/iris.csv')
+    data_header = data.columns
 
-    decisionTree3 = grow_tree(trainingData3)
+    trainingData3 = list(data.to_numpy())  # demo data from matlab
+
+    decisionTree3 = grow_tree(trainingData3, columns_map=data_header)
     plot(decisionTree3)
     prune(decisionTree3, 0.5)
     plot(decisionTree3)
     G, edge_dict = draw_graph(get_neighborhood_list(decisionTree3))
-    plt.figure(figsize=(15,15))
+    plt.figure(figsize=(20,20))
     plt.subplot(111)
 
-    pos = nx.kamada_kawai_layout(G,scale= 5)
-    nx.draw_networkx_edge_labels(G,pos,edge_dict,verticalalignment='center')
+    pos = nx.kamada_kawai_layout(G,scale=3)
+    nx.draw_networkx_edge_labels(G,pos,edge_dict,horizontalalignment='right',verticalalignment='center')
     nx.draw(G, pos)
     plt.show()

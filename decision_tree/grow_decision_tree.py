@@ -2,19 +2,23 @@
 import collections
 from decision_tree.algorithm import *
 import itertools
+
 class DecisionTree:
     id_iter = itertools.count()
     """Binary tree implementation with true and false branch. """
-    def __init__(self, col=-1, value=None, branch_with_value=None, branch_with_others=None, outputs=None):
+    def __init__(self, col=-1, value=None, branch_with_value=None, branch_with_others=None, outputs=None, columns_map=None):
         self.id = next(DecisionTree.id_iter)
         self.branch_with_value = branch_with_value
         self.branch_with_others = branch_with_others
         self.value = value
         self.col = col # kolumny
         self.outputs = outputs # None for nodes, not None for leaves
+        if columns_map is not None:
+            self.col_name = columns_map[self.col]
+        else:
+            self.col_name = str(self.col)
 
-
-def grow_tree(data, algorithm_fun = entropy):
+def grow_tree(data, algorithm_fun = entropy, columns_map=None):
     """Grows and then returns a binary decision tree.
     algorithm_fun: entropy or gini"""
 
@@ -54,13 +58,13 @@ def grow_tree(data, algorithm_fun = entropy):
     # jeżeli wystąpił zysk to dzielimy dalej -> powtarzamy proces
     if best_info_gain > 0: # gdyby dać tu 0.5 to byłby prepruning
         #rekurencja
-        branch_with_value = grow_tree(best_subsets[0]) # gałąź ktora zawiera daną cechę (bardziej informatywną)
-        branch_with_others =grow_tree(best_subsets[1]) # gałąź z resztą cech
+        branch_with_value = grow_tree(best_subsets[0], columns_map=columns_map) # gałąź ktora zawiera daną cechę (bardziej informatywną)
+        branch_with_others =grow_tree(best_subsets[1], columns_map=columns_map) # gałąź z resztą cech
         # branch_with_value i branch_with_others zapewniają rekurencję, czyli "zadajemy" kolejne pytania, tak długo az zysk informacyjny = 0
         # depth drzewa rozwija się właśnie na tym etapie. W sytuacji gdy zysk informacyjny = 0, uruchamiany jest else, w którym obliczane są
         # wystąpienia danej etykiety w liściu
         # depth -> czyli głębokość drzewa to kolejne instancje klasy Decision Tree - węzły
-        return DecisionTree(col=best_value_labelled[0], value=best_value_labelled[1], branch_with_value=branch_with_value, branch_with_others=branch_with_others)
+        return DecisionTree(col=best_value_labelled[0], value=best_value_labelled[1], branch_with_value=branch_with_value, branch_with_others=branch_with_others,columns_map=columns_map)
     else:
         # zwraca liczebnośći labeli w formie słownika np. skały: 10, dom: 9, ścianka: 5
         return DecisionTree(outputs=unique_labels_counter(data))
@@ -174,9 +178,9 @@ def plot(decisionTree):
             return str(decisionTree.outputs)
         else:
             if isinstance(decisionTree.value, int) or isinstance(decisionTree.value, float):
-                decision = f'id={decisionTree.__hash__()} Column {decisionTree.col}: x >= {decisionTree.value}?'
+                decision = f'id={decisionTree.__hash__()} Column {decisionTree.col_name}: x >= {decisionTree.value}?'
             else:
-                decision = f'id={decisionTree.__hash__()},Column {decisionTree.col}: x == {decisionTree.value}?'
+                decision = f'id={decisionTree.__hash__()},Column {decisionTree.col_name}: x == {decisionTree.value}?'
             branch_with_value = indent + 'yes -> ' + toString(decisionTree.branch_with_value, indent + '\t\t')
             branch_with_others = indent + 'no  -> ' + toString(decisionTree.branch_with_others, indent + '\t\t')
             return (decision + '\n' + branch_with_value + '\n' + branch_with_others)
