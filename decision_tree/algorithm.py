@@ -13,7 +13,10 @@ def set_splitter(data, col, value):
 def unique_labels_counter(data): # zlicza wystąpienia dla danej etykiety
     results = {}
     for row in data:
-        label = row[-1]
+        if not isinstance(row, int):
+            label = row[-1]
+        else:
+            label = row
         if label not in results: # operator bool czyli "jeśli lebel nie jest w bazie" to zainicjuj go (dodaj do bazy)
             results[label] = 0
         results[label] += 1 # dodaje do etykiety kolejne wystąpienie
