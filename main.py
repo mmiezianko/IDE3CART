@@ -21,24 +21,31 @@ def get_hash_dict(d_tree, hash_dict):
 
 
 def get_neighborhood_list(d_tree):
+    # tworzymy pusty słownik, do którego bedziemy dopisywać informacje o strukturze drzewa
+    hash_dict = {}
+    # d_tree to jest drzewo
+    get_hash_dict(d_tree, hash_dict)
 
-    dict = {}
-    get_hash_dict(d_tree, dict)
-    print(dict)
-    values = [k for k in dict.keys()]
-    for v in dict.values():
-        values.extend(v['children'])
-    hashes = set(values)
+    # verticles to lista kluczy d_tree.__hash__(), czyli wierzchołki
+    vertices = [k for k in hash_dict.keys()]
+    # do wierzchołków dopisujemy wszystkie dzieci - również liście (czyli dzieci które nie stały się parentsami)
+    # robimy to ponieważ w funkcji get_hash_dict (przez warunek if d_tree.branch_with_value is not None:) nie uwzględniamy dzieci, które nie są parentsami (liście)
+    for v in hash_dict.values():
+        vertices.extend(v['children'])
+    # używamy set, czyli struktury danych która jest listą bez powtórzeń. Skoro wzieliśmy wszystkie dzieci, to mogą
+    # wsytępować powtórzenia, ponieważ niektóre dzieci są zarówno dziećmi jak i parentsami
+    hashes = set(vertices)
+    # tworzymy mapowanie k:i  gdzie k jest kluczem a "i" intigerem
     hash_to_int = {k:i for i,k in enumerate(hashes)}
-    print(hash_to_int)
+
     neighborhood_list = {}
-    for k,v in dict.items():
+    for k,v in hash_dict.items():
         neighborhood_list[hash_to_int[k]]={'value': v['value'],
                                            'col': v['col'],
                                            'children':[hash_to_int[v['children'][0]], hash_to_int[v['children'][1]]],
-
+                                            'size': v['size']
                                            }
-    print(neighborhood_list)
+
     return neighborhood_list
 
 def draw_graph(nb_list):
@@ -56,29 +63,39 @@ def draw_graph(nb_list):
 
     for k,v in nb_list.items():
         G.nodes[k]['value'] = v['value']
+    nodes_dict = {}
+    for vertice in vertices:
+        if vertice in nb_list.keys():
+            nodes_dict[vertice] = nb_list[vertice]['size']
+        else:
+            nodes_dict[vertice] = 0
+    return G, edge_dict, nodes_dict
 
-    return G, edge_dict
-
-
-
-
-
-
-if __name__ == "__main__":
-    data = pd.read_csv('notebooks/dane.csv')
+def load_csv(filename):
+    data = pd.read_csv(filename)
     data_header = data.columns
 
-    trainingData3 = list(data.to_numpy())  # demo data from matlab
+    return list(data.to_numpy()) , data_header
 
-    decisionTree3 = grow_tree(trainingData3, columns_map=data_header)
-    plot(decisionTree3)
-    prune(decisionTree3, 0.5)
-    plot(decisionTree3)
-    G, edge_dict = draw_graph(get_neighborhood_list(decisionTree3))
-    plt.figure(figsize=(10,10))
+def grow_and_show_tree(filename):
+    training_data, data_header = load_csv(filename)
+    d_tree = grow_tree(training_data, columns_map=data_header)
+    plot(d_tree)
+    prune(d_tree, 0.5)
+    plot(d_tree)
+    G, edge_dict, nodes_dict = draw_graph(get_neighborhood_list(d_tree))
+    plt.figure(figsize=(25,25))
     plt.subplot(111)
-
     pos = nx.kamada_kawai_layout(G,scale=3)
-    nx.draw_networkx_edge_labels(G,pos,edge_dict,horizontalalignment='right',verticalalignment='center')
+    nx.draw_networkx_edge_labels(G,pos,edge_dict,verticalalignment='center')
+    nx.draw_networkx_labels(G, pos, nodes_dict)
     nx.draw(G, pos)
     plt.show()
+    return d_tree
+
+if __name__ == "__main__":
+
+    decission_tree = grow_and_show_tree('notebooks/dane.csv')
+
+
+    

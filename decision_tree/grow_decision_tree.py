@@ -6,7 +6,7 @@ import itertools
 class DecisionTree:
     id_iter = itertools.count()
     """Binary tree implementation with true and false branch. """
-    def __init__(self, col=-1, value=None, branch_with_value=None, branch_with_others=None, outputs=None, columns_map=None):
+    def __init__(self, col=-1, value=None, branch_with_value=None, branch_with_others=None, outputs=None, columns_map=None, size = 0):
         self.id = next(DecisionTree.id_iter)
         self.branch_with_value = branch_with_value
         self.branch_with_others = branch_with_others
@@ -17,13 +17,14 @@ class DecisionTree:
             self.col_name = columns_map[self.col]
         else:
             self.col_name = str(self.col)
+        self.set_size = size
 
 def grow_tree(data, algorithm_fun = entropy, columns_map=None):
     """Grows and then returns a binary decision tree.
     algorithm_fun: entropy or gini"""
-
+    size = len(data)
     # data -> rekordy tabeli; jeżeli są = 0 to zwracamy puste drzewo
-    if len(data) == 0: return DecisionTree()
+    if size == 0: return DecisionTree()
     # algorithm_fun dla zbioru danych w pierwszej interacji bedzie sie odnosił do entropii całego zbioru danych.
     # w kolenych iteracjach będzie to entropia poprzedniej decyzji
     current_result = algorithm_fun(data) # obliczanie entropii ukadu
@@ -64,10 +65,10 @@ def grow_tree(data, algorithm_fun = entropy, columns_map=None):
         # depth drzewa rozwija się właśnie na tym etapie. W sytuacji gdy zysk informacyjny = 0, uruchamiany jest else, w którym obliczane są
         # wystąpienia danej etykiety w liściu
         # depth -> czyli głębokość drzewa to kolejne instancje klasy Decision Tree - węzły
-        return DecisionTree(col=best_value_labelled[0], value=best_value_labelled[1], branch_with_value=branch_with_value, branch_with_others=branch_with_others,columns_map=columns_map)
+        return DecisionTree(col=best_value_labelled[0], value=best_value_labelled[1], branch_with_value=branch_with_value, branch_with_others=branch_with_others,columns_map=columns_map, size = size)
     else:
         # zwraca liczebnośći labeli w formie słownika np. skały: 10, dom: 9, ścianka: 5
-        return DecisionTree(outputs=unique_labels_counter(data))
+        return DecisionTree(outputs=unique_labels_counter(data), size = size)
     # DecisionTree zawiera wskaźniki na instancje klasy DecisionTree ( te wskaźniki to gałęxie - "małe drzewa")
 
 # jest to tzw. post pruning. Robimy to aby zrozumieć lepiej działanie drzewa, ale równie dobrze można by zrobić
